@@ -2,12 +2,46 @@
 
 [![npm version](https://img.shields.io/npm/v/taggie-cli.svg)](https://www.npmjs.com/package/taggie-cli)
 [![npm downloads](https://img.shields.io/npm/dm/taggie-cli.svg)](https://www.npmjs.com/package/taggie-cli)
-[![license](https://img.shields.io/npm/l/taggie-cli.svg)](https://github.com/2Nerds-Solutions/taggie-cli/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/taggie-cli.svg)](https://github.com/nerds-lab-chapter-26/taggie-cli/blob/main/LICENSE)
 [![node](https://img.shields.io/node/v/taggie-cli.svg)](https://www.npmjs.com/package/taggie-cli)
 
-**A CLI for safely adding and managing project attribution across your codebase.**
+**Safely add and manage project attribution across your codebase.**  
+Interactive · CI · AI Agents
 
-taggie can:
+It's a small, local-first developer utility — no backend, no account, no dashboard. Everything happens on your filesystem, in one command.
+
+## Demo
+
+<!-- TODO: Add 20-30 second Taggie demo GIF here -->
+
+```text
+$ taggie
+
+→ Detecting project...
+→ Framework: Next.js
+→ Finding footer...
+→ Updating attribution...
+✓ Done
+```
+
+## Quick start
+
+```bash
+npm install -g taggie-cli
+cd my-project
+taggie
+```
+
+That's it — taggie detects your stack, finds (or creates) the footer, and adds the attribution.
+
+For scripts and CI, skip the prompts:
+
+```bash
+taggie --yes --for "Acme Org" --emoji "🔥" --output app   # non-interactive: auto-detect + inject/create + wire
+taggie --check                                             # read-only compliance check, meaningful exit code
+```
+
+## What taggie does
 
 ```text
 Generate   an interactive "Made with ___ for ___" tagline
@@ -18,18 +52,30 @@ Update     re-run any of the above; taggie replaces its own output, never duplic
 Remove     strip taggie's attribution safely, without touching your code around it
 ```
 
-It's a small, local-first developer utility - no backend, no account, no dashboard. Everything happens on your filesystem, in one command.
+## Why Taggie?
 
-## Workflow
+Manually keeping attribution consistent across projects — and frameworks — is repetitive and easy to get wrong: hand-editing a footer, forgetting to update it everywhere it changed, and having no reliable way to check it's still correct.
 
-```text
-1. (optional) Define your standard attribution in taggie.config.json
-2. Run taggie - interactively, or non-interactively with --sync/--yes
-3. taggie detects your stack (Next.js/React/Vue/Svelte/plain HTML)
-4. taggie safely adds/updates the footer, creating and wiring a Footer
-   component if none exists - or refuses if it can't do so safely
-5. taggie --check verifies compliance in CI
-```
+Taggie automates that safely:
+
+- Detects your project's stack (Next.js, React, Vue, Svelte, plain HTML)
+- Finds the right place for the footer, or creates one if none exists
+- Updates only the block it owns — never touches unrelated code
+- Verifies compliance in CI (`--check`), with a meaningful exit code
+- Synchronizes the same standard across multiple projects (`--sync`)
+- Supports project config and named profiles instead of repeated flags
+- Can be run by a coding agent instead of you typing commands
+
+## Safe by design
+
+- Refuses unsafe modifications instead of guessing
+- Only ever modifies its own marked block — never a whole file or component
+- Never blindly overwrites source files
+- `--check` is always read-only
+- `--dry-run` previews changes without writing anything
+- CI-ready: meaningful exit codes, non-interactive flags, idempotent `--sync`
+
+See [Safety](#safety) below for the full guarantees.
 
 ## Installation
 
@@ -317,7 +363,7 @@ taggie --init-skill                                            # install agent i
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for the version history, or the [Releases](https://github.com/2Nerds-Solutions/taggie-cli/releases) page.
+See [CHANGELOG.md](CHANGELOG.md) for the version history, or the [Releases](https://github.com/nerds-lab-chapter-26/taggie-cli/releases) page.
 
 ## Running tests
 
@@ -335,6 +381,15 @@ npm publish
 ```
 
 > The name "taggie" was already taken on npm (an unrelated redis package), so this package is named `taggie-cli` — the command itself is still `taggie`. You can rename it in `package.json` before publishing if you'd like.
+
+## Support Taggie
+
+If Taggie is useful to you:
+
+- ⭐ Star the repository
+- 🐛 Open an issue when something breaks
+- 💡 Suggest improvements
+- 🤝 Contribute
 
 ---
 
