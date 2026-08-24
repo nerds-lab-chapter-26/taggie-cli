@@ -13,7 +13,6 @@ It's a small, local-first developer utility — no backend, no account, no dashb
 ## Demo
 
 <img width="640" height="360" alt="demo" src="https://github.com/user-attachments/assets/d923fd62-81e3-49b8-9ebf-5a7779fe92c2" />
-```
 
 ## Quick start
 
