@@ -1,18 +1,21 @@
 # taggie-cli
 
-[![npm version](https://img.shields.io/npm/v/taggie-cli.svg)](https://www.npmjs.com/package/taggie-cli)
-[![npm downloads](https://img.shields.io/npm/dm/taggie-cli.svg)](https://www.npmjs.com/package/taggie-cli)
-[![license](https://img.shields.io/npm/l/taggie-cli.svg)](https://github.com/nerds-lab-chapter-26/taggie-cli/blob/main/LICENSE)
-[![node](https://img.shields.io/node/v/taggie-cli.svg)](https://www.npmjs.com/package/taggie-cli)
+[![npm version](https://img.shields.io/npm/v/taggie-cli.svg?style=flat-square&color=blue)](https://www.npmjs.com/package/taggie-cli)
+[![npm downloads](https://img.shields.io/npm/dm/taggie-cli.svg?style=flat-square&color=blue)](https://www.npmjs.com/package/taggie-cli)
+[![license](https://img.shields.io/npm/l/taggie-cli.svg?style=flat-square&color=green)](https://github.com/nerds-lab-chapter-26/taggie-cli/blob/main/LICENSE)
+[![node](https://img.shields.io/node/v/taggie-cli.svg?style=flat-square&color=informational)](https://www.npmjs.com/package/taggie-cli)
+[![built by Nerds Lab](https://img.shields.io/badge/built_by-Nerds%20Lab-blueviolet?style=flat-square)](https://github.com/nerds-lab-chapter-26)
 
 **Safely add and manage project attribution across your codebase.**  
 Interactive · CI · AI Agents
 
 It's a small, local-first developer utility — no backend, no account, no dashboard. Everything happens on your filesystem, in one command.
 
+Built and maintained by [Nerds Lab](https://github.com/nerds-lab-chapter-26) — used in our own projects, not just a weekend script.
+
 ## Demo
 
-<img width="640" height="360" alt="demo" src="https://github.com/user-attachments/assets/d923fd62-81e3-49b8-9ebf-5a7779fe92c2" />
+<img width="640" height="360" alt="taggie --sync running in a terminal" src="./assets/demo.gif" />
 
 ## Quick start
 
@@ -144,7 +147,7 @@ Taggie Project Check
 ✓ Project root: /path/to/project
 ✓ Footer: app/layout.tsx
 ✓ Taggie attribution: Found
-✓ Attribution: Made with ❤️ by 2Nerds
+✓ Attribution: Made with ❤️ by Nerds Lab
 ✓ Status: Up to date
 ```
 
@@ -156,7 +159,7 @@ Optional. Define your project's standard attribution once instead of passing the
 
 ```json
 {
-  "by": "2Nerds",
+  "by": "Nerds Lab",
   "for": "Acme",
   "emoji": "❤️",
   "template": "byline"
@@ -189,11 +192,11 @@ Optional, on top of the base config:
 
 ```json
 {
-  "by": "2Nerds",
+  "by": "Nerds Lab",
   "emoji": "❤️",
   "template": "byline",
   "profiles": {
-    "opensource": { "by": "2Nerds Open Source", "emoji": "🚀" }
+    "opensource": { "by": "Nerds Lab Open Source", "emoji": "🚀" }
   },
   "defaultProfile": "default"
 }
@@ -381,6 +384,8 @@ If Taggie is useful to you:
 - 💡 Suggest improvements
 - 🤝 Contribute
 
+We're [Nerds Lab](https://github.com/nerds-lab-chapter-26) — we build small tools like this one because we use them ourselves and got tired of doing the boring parts by hand.
+
 ---
 
-Made with ❤️ by 2Nerds
+Made with ❤️ by Nerds Lab

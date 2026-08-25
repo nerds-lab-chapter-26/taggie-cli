@@ -83,12 +83,12 @@ A project can define its standard attribution once instead of passing flags ever
 
 ```json
 {
-  "by": "2Nerds",
+  "by": "Nerds Lab",
   "for": "Acme",
   "emoji": "❤️",
   "template": "byline",
   "profiles": {
-    "opensource": { "by": "2Nerds Open Source", "emoji": "🚀" }
+    "opensource": { "by": "Nerds Lab Open Source", "emoji": "🚀" }
   },
   "defaultProfile": "default"
 }

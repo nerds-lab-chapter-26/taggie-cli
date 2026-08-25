@@ -32,11 +32,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/2Nerds-Solutions/taggie-cli.git"
+    "url": "git+https://github.com/nerds-lab-chapter-26/taggie-cli.git"
   },
-  "homepage": "https://github.com/2Nerds-Solutions/taggie-cli#readme",
+  "homepage": "https://github.com/nerds-lab-chapter-26/taggie-cli#readme",
   "bugs": {
-    "url": "https://github.com/2Nerds-Solutions/taggie-cli/issues"
+    "url": "https://github.com/nerds-lab-chapter-26/taggie-cli/issues"
   },
   "dependencies": {
     "chalk": "^5.3.0",
