@@ -1,7 +1,7 @@
 # taggie-cli
 
 [![npm version](https://img.shields.io/npm/v/taggie-cli.svg?style=flat-square&color=blue)](https://www.npmjs.com/package/taggie-cli)
-[![npm downloads](https://img.shields.io/npm/dt/taggie-cli.svg?style=flat-square&color=blue)](https://www.npmjs.com/package/taggie-cli)
+[![npm downloads](https://img.shields.io/npm/dt/taggie-cli.svg?style=flat-square&color=blue&cacheSeconds=3600)](https://www.npmjs.com/package/taggie-cli)
 [![license](https://img.shields.io/npm/l/taggie-cli.svg?style=flat-square&color=green)](https://github.com/nerds-lab-chapter-26/taggie-cli/blob/main/LICENSE)
 [![node](https://img.shields.io/node/v/taggie-cli.svg?style=flat-square&color=informational)](https://www.npmjs.com/package/taggie-cli)
 [![built by Nerds Lab](https://img.shields.io/badge/built_by-Nerds%20Lab-blueviolet?style=flat-square)](https://github.com/nerds-lab-chapter-26)
