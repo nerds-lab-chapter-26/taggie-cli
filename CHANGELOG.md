@@ -2,6 +2,13 @@
 
 All notable changes to `taggie-cli` are documented here. Versions match what's published on [npm](https://www.npmjs.com/package/taggie-cli?activeTab=versions).
 
+## 0.2.7
+
+- Moved the repository, homepage, and issues links to the Nerds Lab GitHub organization, so the npm page points at the right place.
+- Refreshed the README with an animated demo, updated badges, and Nerds Lab branding.
+- Added CONTRIBUTING.md.
+- Fixed `npm test` failing on newer Node versions.
+
 ## 0.2.4
 
 - README's own attribution line now shows the emoji glyph (`Made with ❤️ by 2Nerds`) instead of the spelled-out word, matching taggie's own convention.

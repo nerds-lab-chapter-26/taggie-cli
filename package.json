@@ -1,6 +1,6 @@
 {
   "name": "taggie-cli",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "A CLI for safely adding and managing project attribution (\"Made with ___ for ___\" footers) across your codebase - generate, check, sync, and remove.",
   "type": "module",
   "bin": {
@@ -11,7 +11,7 @@
     "skill"
   ],
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18"
