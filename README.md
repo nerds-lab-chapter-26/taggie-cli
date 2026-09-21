@@ -382,7 +382,7 @@ If Taggie is useful to you:
 - ⭐ Star the repository
 - 🐛 Open an issue when something breaks
 - 💡 Suggest improvements
-- 🤝 Contribute
+- 🤝 [Contribute](CONTRIBUTING.md)
 
 We're [Nerds Lab](https://github.com/nerds-lab-chapter-26) — we build small tools like this one because we use them ourselves and got tired of doing the boring parts by hand.
 
