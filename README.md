@@ -422,6 +422,10 @@ If Taggie is useful to you:
 
 We're [Nerds Lab](https://github.com/nerds-lab-chapter-26). We build small tools like this one because we use them ourselves and got tired of doing the boring parts by hand.
 
+## Support
+
+Questions, bug reports, or feature requests: open an [issue](https://github.com/nerds-lab-chapter-26/taggie-cli/issues), or email [maryams91101@gmail.com](mailto:maryams91101@gmail.com).
+
 ---
 
 Made with ❤️ by Nerds Lab

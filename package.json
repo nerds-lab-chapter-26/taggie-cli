@@ -29,6 +29,7 @@
     "cursor",
     "ai-agent"
   ],
+  "author": "Nerds Lab <maryams91101@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
