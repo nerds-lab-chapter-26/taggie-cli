@@ -9,9 +9,9 @@
 **Safely add and manage project attribution across your codebase.**  
 Interactive · CI · AI Agents
 
-It's a small, local-first developer utility — no backend, no account, no dashboard. Everything happens on your filesystem, in one command.
+It's a small, local-first developer utility: no backend, no account, no dashboard. Everything happens on your filesystem, in one command.
 
-Built and maintained by [Nerds Lab](https://github.com/nerds-lab-chapter-26) — used in our own projects, not just a weekend script.
+Built and maintained by [Nerds Lab](https://github.com/nerds-lab-chapter-26), used in our own projects, not just a weekend script.
 
 ## Demo
 
@@ -25,7 +25,7 @@ cd my-project
 taggie
 ```
 
-That's it — taggie detects your stack, finds (or creates) the footer, and adds the attribution.
+That's it: taggie detects your stack, finds (or creates) the footer, and adds the attribution.
 
 For scripts and CI, skip the prompts:
 
@@ -47,13 +47,13 @@ Remove     strip taggie's attribution safely, without touching your code around 
 
 ## Why Taggie?
 
-Manually keeping attribution consistent across projects — and frameworks — is repetitive and easy to get wrong: hand-editing a footer, forgetting to update it everywhere it changed, and having no reliable way to check it's still correct.
+Manually keeping attribution consistent across projects and frameworks is repetitive and easy to get wrong: hand-editing a footer, forgetting to update it everywhere it changed, and having no reliable way to check it's still correct.
 
 Taggie automates that safely:
 
 - Detects your project's stack (Next.js, React, Vue, Svelte, plain HTML)
 - Finds the right place for the footer, or creates one if none exists
-- Updates only the block it owns — never touches unrelated code
+- Updates only the block it owns, never touches unrelated code
 - Verifies compliance in CI (`--check`), with a meaningful exit code
 - Synchronizes the same standard across multiple projects (`--sync`)
 - Supports project config and named profiles instead of repeated flags
@@ -62,7 +62,7 @@ Taggie automates that safely:
 ## Safe by design
 
 - Refuses unsafe modifications instead of guessing
-- Only ever modifies its own marked block — never a whole file or component
+- Only ever modifies its own marked block, never a whole file or component
 - Never blindly overwrites source files
 - `--check` is always read-only
 - `--dry-run` previews changes without writing anything
@@ -94,10 +94,10 @@ taggie
 ```
 
 It will ask:
-1. Any emoji, shortcode, or word (❤️ `:fire:` rocket 🌟 or whatever you like) — taggie translates it into a word for the tagline
+1. Any emoji, shortcode, or word (❤️ `:fire:` rocket 🌟 or whatever you like): taggie translates it into a word for the tagline
 2. Who it's made for (company/team/project)
 3. Style (`Made with love for X` / `Made with love by Y for X` / `Crafted with love by Y for X`)
-4. Where the result should go — straight into your app's footer, FOOTER.md, README.md, or just the terminal
+4. Where the result should go: straight into your app's footer, FOOTER.md, README.md, or just the terminal
 
 Any question already answered by a CLI flag or `taggie.config.json` (see below) is skipped.
 
@@ -111,11 +111,11 @@ taggie detects your stack from `package.json` and looks in the right kind of fil
 | React | any `.jsx`/`.tsx`/`.js`/`.ts` file with a `<footer>` tag (e.g. `src/App.jsx`) | creates `src/components/Footer.jsx` (or `.tsx`) |
 | Vue | any `.vue` file with a `<footer>` tag | creates `src/components/Footer.vue` |
 | Svelte | any `.svelte` file with a `<footer>` tag | creates `src/lib/Footer.svelte` |
-| Plain HTML | any `.html` file — creates a `<footer>` before `</body>` if none exists | asks for a path |
+| Plain HTML | any `.html` file, creates a `<footer>` before `</body>` if none exists | asks for a path |
 
 Re-running taggie updates the same tagline in place instead of duplicating it, so it's safe to run again.
 
-When taggie creates a brand new Footer component, it also automatically wires it into your app's root file — no manual import/render step needed:
+When taggie creates a brand new Footer component, it also automatically wires it into your app's root file, no manual import/render step needed:
 
 | Stack | Root file it wires into |
 |---|---|
@@ -126,7 +126,7 @@ When taggie creates a brand new Footer component, it also automatically wires it
 
 If none of those exist, taggie falls back to printing manual import/render instructions instead of guessing at an unfamiliar file.
 
-Every footer taggie creates from scratch is centered and theme-aware (text color adapts to `prefers-color-scheme`, background stays transparent so it blends into your actual page). This only applies to footers taggie creates itself — it never touches the styling of a `<footer>` that already existed.
+Every footer taggie creates from scratch is centered and theme-aware (text color adapts to `prefers-color-scheme`, background stays transparent so it blends into your actual page). This only applies to footers taggie creates itself; it never touches the styling of a `<footer>` that already existed.
 
 ```bash
 taggie --yes --for "Acme Org" --emoji "🔥" --output src/components/Footer.jsx
@@ -151,7 +151,7 @@ Taggie Project Check
 ✓ Status: Up to date
 ```
 
-If a `taggie.config.json` is present, "up to date" means the live attribution matches what the config would generate — not just that *some* attribution exists.
+If a `taggie.config.json` is present, "up to date" means the live attribution matches what the config would generate, not just that *some* attribution exists.
 
 ## Configuration (`taggie.config.json`)
 
@@ -166,7 +166,7 @@ Optional. Define your project's standard attribution once instead of passing the
 }
 ```
 
-Nothing requires this file — every existing `taggie`/`--yes` usage keeps working exactly as before without one.
+Nothing requires this file; every existing `taggie`/`--yes` usage keeps working exactly as before without one.
 
 **Precedence** (highest to lowest):
 
@@ -180,11 +180,11 @@ taggie.config.json (base fields)
 Interactive prompts/defaults
 ```
 
-A CLI override (e.g. `--sync --by "Temporary Team"`) is used for that run only — it never rewrites `taggie.config.json`.
+A CLI override (e.g. `--sync --by "Temporary Team"`) is used for that run only; it never rewrites `taggie.config.json`.
 
-If `taggie.config.json` exists but isn't valid JSON, taggie refuses to guess what you meant — it prints the parse error and exits non-zero instead of silently ignoring the file (applies to the interactive/generate flow, `--check`, and `--sync`). In a multi-project `--sync`, a malformed config in one target only skips that target; the rest still run.
+If `taggie.config.json` exists but isn't valid JSON, taggie refuses to guess what you meant: it prints the parse error and exits non-zero instead of silently ignoring the file (applies to the interactive/generate flow, `--check`, and `--sync`). In a multi-project `--sync`, a malformed config in one target only skips that target; the rest still run.
 
-Selecting a profile that doesn't exist in the config (`--profile typo`) isn't an error — it silently falls back to the base config fields, same as not passing `--profile` at all.
+Selecting a profile that doesn't exist in the config (`--profile typo`) isn't an error; it silently falls back to the base config fields, same as not passing `--profile` at all.
 
 ### Profiles
 
@@ -206,7 +206,7 @@ Optional, on top of the base config:
 taggie --sync --profile opensource
 ```
 
-A profile's fields override the base config's; anything a profile doesn't set falls back to the base. If you don't need profiles, `taggie.config.json` behaves exactly like a flat config file — no added complexity.
+A profile's fields override the base config's; anything a profile doesn't set falls back to the base. If you don't need profiles, `taggie.config.json` behaves exactly like a flat config file, no added complexity.
 
 ## Sync
 
@@ -214,7 +214,7 @@ A profile's fields override the base config's; anything a profile doesn't set fa
 taggie --sync
 ```
 
-Brings the current project into compliance with the desired attribution (from config/profile/CLI flags): adds it if missing, updates it in place if outdated, and does nothing if it's already correct. Fully non-interactive — safe for scripts and CI, and idempotent (running it repeatedly converges to one correct attribution, never duplicates).
+Brings the current project into compliance with the desired attribution (from config/profile/CLI flags): adds it if missing, updates it in place if outdated, and does nothing if it's already correct. Fully non-interactive, safe for scripts and CI, and idempotent (running it repeatedly converges to one correct attribution, never duplicates).
 
 ```text
 Taggie Sync
@@ -242,7 +242,7 @@ Taggie Sync
 No changes were made.
 ```
 
-`--sync --dry-run` reports what *would* happen (add/update/no-op) without writing anything — useful to preview a sync, or in CI to fail if the project isn't already in sync without actually changing it.
+`--sync --dry-run` reports what *would* happen (add/update/no-op) without writing anything, useful to preview a sync, or in CI to fail if the project isn't already in sync without actually changing it.
 
 ### Multi-project sync
 
@@ -250,7 +250,7 @@ No changes were made.
 taggie --sync ./projects/*
 ```
 
-Each target directory is synced independently, with its own `taggie.config.json` if present. A failure in one project (bad path, missing config, unsafe write) is reported and skipped — it never blocks or corrupts the others, and taggie never touches anything outside the directories you pass.
+Each target directory is synced independently, with its own `taggie.config.json` if present. A failure in one project (bad path, missing config, unsafe write) is reported and skipped; it never blocks or corrupts the others, and taggie never touches anything outside the directories you pass.
 
 ```text
 Taggie Multi-Project Sync
@@ -272,7 +272,7 @@ taggie --remove --output FOOTER.md    # or target one file
 taggie --remove --dry-run             # preview what would be removed, without writing anything
 ```
 
-Removal only ever strips taggie's own marker block. It never deletes a Footer component file or un-wires its `<Footer />` import/render, since those may have been customized by hand after taggie created them — the one exception is an empty `FOOTER.md`, which is deleted outright since taggie owns that file's entire purpose.
+Removal only ever strips taggie's own marker block. It never deletes a Footer component file or un-wires its `<Footer />` import/render, since those may have been customized by hand after taggie created them; the one exception is an empty `FOOTER.md`, which is deleted outright since taggie owns that file's entire purpose.
 
 ## Non-interactive (for scripts/CI)
 
@@ -308,7 +308,7 @@ jobs:
 
 ## Let a coding agent run taggie for you
 
-Instead of typing `taggie` yourself, install agent integration once and just ask your agent to "add a footer," "check attribution," or "sync attribution" — it runs taggie on your behalf and reports what happened.
+Instead of typing `taggie` yourself, install agent integration once and just ask your agent to "add a footer," "check attribution," or "sync attribution": it runs taggie on your behalf and reports what happened.
 
 ```bash
 taggie --init-skill
@@ -318,8 +318,8 @@ It asks which agent you use:
 
 | Choice | What it installs |
 |---|---|
-| Claude Code | `.claude/skills/taggie/SKILL.md` — a [Claude Code](https://claude.com/claude-code) skill |
-| Other (Codex, Cursor, Aider, etc.) | a `## taggie` section in `AGENTS.md` — the cross-tool convention most other coding agents read |
+| Claude Code | `.claude/skills/taggie/SKILL.md`, a [Claude Code](https://claude.com/claude-code) skill |
+| Other (Codex, Cursor, Aider, etc.) | a `## taggie` section in `AGENTS.md`, the cross-tool convention most other coding agents read |
 | Both | both of the above |
 
 Skip the prompt with `--agent claude`, `--agent agents`, or `--agent both` (required if you also pass `--yes`). Both are project-scoped by default; copy `.claude/skills/taggie/SKILL.md` to `~/.claude/skills/taggie/SKILL.md` to make the Claude Code skill available in every project instead. Re-running `--init-skill` updates its section in place rather than duplicating it.
@@ -328,15 +328,15 @@ Both the skill and the `AGENTS.md` section point agents at the full lifecycle (`
 
 ## Framework support
 
-Next.js, React, Vue, Svelte, and plain HTML — see [Injecting into your app's footer](#injecting-into-your-apps-footer) above for how each is detected and where a new footer gets created.
+Next.js, React, Vue, Svelte, and plain HTML. See [Injecting into your app's footer](#injecting-into-your-apps-footer) above for how each is detected and where a new footer gets created.
 
 ## Safety
 
-- Never overwrites source files blindly — if there's no safe place to insert or update a footer, taggie refuses and reports why, rather than guessing.
+- Never overwrites source files blindly: if there's no safe place to insert or update a footer, taggie refuses and reports why, rather than guessing.
 - Never removes content it doesn't own: `--remove` only strips its own marked block, never a whole Footer component or its wiring.
 - Never modifies anything outside the project root (or, in multi-project `--sync`, outside the specific target directory it's currently on).
 - `--check` is always read-only.
-- The taggie marker (`<!-- taggie -->...<!-- /taggie -->` or `{/* taggie */}...{/* /taggie */}`) is the single source of truth for what taggie manages — only content inside those markers is ever automatically updated or removed.
+- The taggie marker (`<!-- taggie -->...<!-- /taggie -->` or `{/* taggie */}...{/* /taggie */}`) is the single source of truth for what taggie manages; only content inside those markers is ever automatically updated or removed.
 
 ## Examples
 
@@ -364,7 +364,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the version history, or the [Releases](http
 npm test
 ```
 
-Uses Node's built-in test runner (`node --test`) — no extra dev dependencies needed.
+Uses Node's built-in test runner (`node --test`), no extra dev dependencies needed.
 
 ## Publishing to npm (so `npx taggie-cli` works from anywhere)
 
@@ -373,7 +373,7 @@ npm login
 npm publish
 ```
 
-> The name "taggie" was already taken on npm (an unrelated redis package), so this package is named `taggie-cli` — the command itself is still `taggie`. You can rename it in `package.json` before publishing if you'd like.
+> The name "taggie" was already taken on npm (an unrelated redis package), so this package is named `taggie-cli`; the command itself is still `taggie`. You can rename it in `package.json` before publishing if you'd like.
 
 ## Support Taggie
 
@@ -384,7 +384,7 @@ If Taggie is useful to you:
 - 💡 Suggest improvements
 - 🤝 [Contribute](CONTRIBUTING.md)
 
-We're [Nerds Lab](https://github.com/nerds-lab-chapter-26) — we build small tools like this one because we use them ourselves and got tired of doing the boring parts by hand.
+We're [Nerds Lab](https://github.com/nerds-lab-chapter-26). We build small tools like this one because we use them ourselves and got tired of doing the boring parts by hand.
 
 ---
 
