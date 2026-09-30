@@ -2,9 +2,10 @@
 
 All notable changes to `taggie-cli` are documented here. Versions match what's published on [npm](https://www.npmjs.com/package/taggie-cli?activeTab=versions).
 
-## Unreleased
+## 0.2.9
 
-- Added `action.yml`: taggie is now usable as a GitHub Action (`uses: nerds-lab-chapter-26/taggie-cli@v0.2.8`), not just an npm CLI. Supports `check` and `sync`, with a `compliant` output for `check`.
+- Added `action.yml`: taggie is now usable as a GitHub Action (`uses: nerds-lab-chapter-26/taggie-cli@v0.2.9`), not just an npm CLI. Supports `check` and `sync`, with a `compliant` output for `check`.
+- Added a public support email (README, `package.json` author field) for GitHub Developer Program eligibility.
 
 ## 0.2.8
 

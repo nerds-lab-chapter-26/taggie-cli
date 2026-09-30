@@ -333,7 +333,7 @@ jobs:
 Or use taggie as a proper GitHub Action instead of a raw `npx` call, which also gives you a `compliant` output you can branch on:
 
 ```yaml
-- uses: nerds-lab-chapter-26/taggie-cli@v0.2.8
+- uses: nerds-lab-chapter-26/taggie-cli@v0.2.9
   with:
     command: check   # or "sync"
 ```
