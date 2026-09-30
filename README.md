@@ -5,6 +5,7 @@
 [![license](https://img.shields.io/npm/l/taggie-cli.svg?style=flat-square&color=green)](https://github.com/nerds-lab-chapter-26/taggie-cli/blob/main/LICENSE)
 [![node](https://img.shields.io/node/v/taggie-cli.svg?style=flat-square&color=informational)](https://www.npmjs.com/package/taggie-cli)
 [![built by Nerds Lab](https://img.shields.io/badge/built_by-Nerds%20Lab-blueviolet?style=flat-square)](https://github.com/nerds-lab-chapter-26)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Taggie%20Attribution%20Check-6f42c1?style=flat-square&logo=github)](https://github.com/marketplace/actions/taggie-attribution-check)
 
 **Safely add and manage project attribution across your codebase.**  
 Interactive · CI · AI Agents
@@ -338,7 +339,7 @@ Or use taggie as a proper GitHub Action instead of a raw `npx` call, which also 
     command: check   # or "sync"
 ```
 
-See [action.yml](action.yml) for every input (`for`, `by`, `emoji`, `template`, `profile`, `dry-run`, `version`).
+See [action.yml](action.yml) for every input (`for`, `by`, `emoji`, `template`, `profile`, `dry-run`, `version`), or find it on the [GitHub Marketplace](https://github.com/marketplace/actions/taggie-attribution-check).
 
 ## Let a coding agent run taggie for you
 
