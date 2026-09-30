@@ -2,6 +2,10 @@
 
 All notable changes to `taggie-cli` are documented here. Versions match what's published on [npm](https://www.npmjs.com/package/taggie-cli?activeTab=versions).
 
+## Unreleased
+
+- Added `--check-github <owner>` and `--sync-github <owner>`: run the same check/sync across every repo of a GitHub user or org in one go, each in its own throwaway clone. `--sync-github` previews only unless `--yes` is also passed, since it can commit and push to many repos at once. Needs a `--token`, `GITHUB_TOKEN`, or `GH_TOKEN` for private repos or to avoid low anonymous rate limits; forks and archived repos are skipped by default (`--include-forks`/`--include-archived`).
+
 ## 0.2.7
 
 - Moved the repository, homepage, and issues links to the Nerds Lab GitHub organization, so the npm page points at the right place.

@@ -264,6 +264,30 @@ Taggie Multi-Project Sync
 1 skipped
 ```
 
+## Checking (and syncing) a whole GitHub user or org
+
+When you have more than a couple of repos, `--check`/`--sync` on one directory at a time doesn't scale. `--check-github`/`--sync-github` run the same checks and the same sync across every repo of a GitHub user or org in one go, each in its own throwaway clone:
+
+```bash
+taggie --check-github nerds-lab                              # read-only, across every repo
+taggie --sync-github nerds-lab --yes                         # also fixes and pushes non-compliant repos
+```
+
+```text
+Taggie GitHub Check: nerds-lab
+
+✓ nerds-lab/taggie-cli        Next.js - up to date
+✗ nerds-lab/blockspace        React - missing attribution
+⚠ nerds-lab/some-fork         no supported framework detected
+
+1 up to date
+2 need attention
+```
+
+Needs a GitHub token for private repos (or to avoid low anonymous rate limits): pass `--token <token>`, or set `GITHUB_TOKEN`/`GH_TOKEN` in the environment (the same convention `gh` and GitHub Actions use). Forks and archived repos are skipped by default; pass `--include-forks`/`--include-archived` to check them too. `--for`/`--by`/`--emoji`/`--template`/`--profile` work the same as everywhere else, and each repo's own `taggie.config.json` (if it has one) is still respected when you don't override it.
+
+`--sync-github` reuses the exact same `syncProject` logic as local `--sync` (idempotent, refuses unsafe writes) - the only difference is what happens after: **it previews only, by default.** Nothing is committed or pushed unless you also pass `--yes`, since this can touch many repos you own at once. Combine with `--dry-run` if you want a preview report with the exact same wording `--yes` would use, without the reminder banner.
+
 ## Removing the tagline
 
 ```bash
@@ -349,6 +373,8 @@ taggie --sync                                                 # idempotent add/u
 taggie --sync --profile opensource                            # use a named profile
 taggie --sync ./projects/*                                    # sync multiple projects
 taggie --sync --dry-run                                       # preview a sync without writing
+taggie --check-github nerds-lab                                # read-only check across every repo of a user/org
+taggie --sync-github nerds-lab --yes                           # fix and push non-compliant repos, org-wide
 taggie --remove                                                # remove attribution
 taggie --remove --dry-run                                      # preview a removal without writing
 taggie --init-skill                                            # install agent integration

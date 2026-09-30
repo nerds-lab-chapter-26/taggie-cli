@@ -38,6 +38,12 @@ import {
   syncMultipleProjects,
   isMultiSyncFullySuccessful,
   formatMultiSyncReport,
+  resolveGithubToken,
+  fetchGithubRepos,
+  isGithubCheckFullyCompliant,
+  formatGithubCheckReport,
+  isGithubSyncFullySuccessful,
+  formatGithubSyncReport,
 } from "../bin/taggie.js";
 
 const RUN_INJECT = fileURLToPath(
@@ -2343,5 +2349,204 @@ describe("CLI: --remove", () => {
     assert.match(layout, /<Footer \/>/);
 
     await cleanup();
+  });
+});
+
+describe("resolveGithubToken", () => {
+  const ORIGINAL_ENV = { ...process.env };
+
+  test("explicit token wins over any env var", () => {
+    process.env.GITHUB_TOKEN = "from-env";
+    assert.equal(resolveGithubToken("explicit"), "explicit");
+    process.env = { ...ORIGINAL_ENV };
+  });
+
+  test("falls back to GITHUB_TOKEN, then GH_TOKEN, then null", () => {
+    delete process.env.GITHUB_TOKEN;
+    delete process.env.GH_TOKEN;
+    assert.equal(resolveGithubToken(undefined), null);
+
+    process.env.GH_TOKEN = "gh-token";
+    assert.equal(resolveGithubToken(undefined), "gh-token");
+
+    process.env.GITHUB_TOKEN = "github-token";
+    assert.equal(resolveGithubToken(undefined), "github-token");
+
+    process.env = { ...ORIGINAL_ENV };
+  });
+});
+
+describe("fetchGithubRepos", () => {
+  let originalFetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+
+  const cleanup = () => {
+    globalThis.fetch = originalFetch;
+  };
+
+  function fakeRepo(overrides = {}) {
+    return {
+      name: "repo",
+      full_name: "owner/repo",
+      clone_url: "https://github.com/owner/repo.git",
+      default_branch: "main",
+      private: false,
+      fork: false,
+      archived: false,
+      ...overrides,
+    };
+  }
+
+  test("uses the orgs endpoint and maps the fields taggie needs", async () => {
+    const calls = [];
+    globalThis.fetch = async (url) => {
+      calls.push(url);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [fakeRepo()],
+      };
+    };
+
+    const repos = await fetchGithubRepos({ owner: "nerds-lab" });
+    assert.equal(calls[0].includes("/orgs/nerds-lab/repos"), true);
+    assert.deepEqual(repos, [
+      {
+        name: "repo",
+        fullName: "owner/repo",
+        cloneUrl: "https://github.com/owner/repo.git",
+        defaultBranch: "main",
+        private: false,
+      },
+    ]);
+    cleanup();
+  });
+
+  test("falls back to the users endpoint when the owner isn't an org", async () => {
+    let sawUsersCall = false;
+    globalThis.fetch = async (url) => {
+      if (url.includes("/orgs/")) return { ok: false, status: 404, json: async () => [] };
+      sawUsersCall = true;
+      return { ok: true, status: 200, json: async () => [fakeRepo()] };
+    };
+
+    const repos = await fetchGithubRepos({ owner: "someuser" });
+    assert.equal(sawUsersCall, true);
+    assert.equal(repos.length, 1);
+    cleanup();
+  });
+
+  test("throws a clear error when neither endpoint recognizes the owner", async () => {
+    globalThis.fetch = async () => ({ ok: false, status: 404, json: async () => [] });
+    await assert.rejects(() => fetchGithubRepos({ owner: "ghost" }), /not found/);
+    cleanup();
+  });
+
+  test("excludes forks and archived repos by default, includes them when asked", async () => {
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => [
+        fakeRepo({ name: "normal" }),
+        fakeRepo({ name: "a-fork", fork: true }),
+        fakeRepo({ name: "old", archived: true }),
+      ],
+    });
+
+    const defaultRepos = await fetchGithubRepos({ owner: "org" });
+    assert.deepEqual(defaultRepos.map((r) => r.name), ["normal"]);
+
+    const allRepos = await fetchGithubRepos({ owner: "org", includeForks: true, includeArchived: true });
+    assert.deepEqual(allRepos.map((r) => r.name).sort(), ["a-fork", "normal", "old"]);
+    cleanup();
+  });
+
+  test("follows pagination until a short page is returned", async () => {
+    let page1 = Array.from({ length: 100 }, (_, i) => fakeRepo({ name: `repo${i}`, full_name: `org/repo${i}` }));
+    let page2 = [fakeRepo({ name: "last", full_name: "org/last" })];
+    globalThis.fetch = async (url) => {
+      const page = new URL(url).searchParams.get("page");
+      return { ok: true, status: 200, json: async () => (page === "1" ? page1 : page === "2" ? page2 : []) };
+    };
+
+    const repos = await fetchGithubRepos({ owner: "org" });
+    assert.equal(repos.length, 101);
+    assert.equal(repos.at(-1).name, "last");
+    cleanup();
+  });
+});
+
+describe("formatGithubCheckReport / isGithubCheckFullyCompliant", () => {
+  test("reports up-to-date, outdated, missing, no-framework, and skipped repos distinctly", () => {
+    const results = [
+      {
+        repo: "org/up-to-date",
+        ok: true,
+        report: { noFrameworkDetected: false, hasAttribution: true, upToDate: true, frameworkLabel: "React" },
+      },
+      {
+        repo: "org/outdated",
+        ok: true,
+        report: {
+          noFrameworkDetected: false,
+          hasAttribution: true,
+          upToDate: false,
+          frameworkLabel: "Vue",
+          attribution: "Made with love for Old",
+        },
+      },
+      {
+        repo: "org/missing",
+        ok: true,
+        report: { noFrameworkDetected: false, hasAttribution: false, upToDate: null, frameworkLabel: "Next.js" },
+      },
+      {
+        repo: "org/no-framework",
+        ok: true,
+        report: { noFrameworkDetected: true, hasAttribution: false, upToDate: null },
+      },
+      { repo: "org/broken", ok: false, message: "couldn't clone: repository not found" },
+    ];
+
+    const text = formatGithubCheckReport("org", results);
+    assert.match(text, /Taggie GitHub Check: org/);
+    assert.match(text, /org\/up-to-date\s+React - up to date/);
+    assert.match(text, /org\/outdated\s+Vue - outdated/);
+    assert.match(text, /org\/missing\s+Next\.js - missing attribution/);
+    assert.match(text, /org\/no-framework\s+no supported framework detected/);
+    assert.match(text, /org\/broken\s+skipped: couldn't clone: repository not found/);
+    assert.match(text, /1 up to date/);
+    assert.match(text, /4 need attention/);
+
+    assert.equal(isGithubCheckFullyCompliant(results), false);
+    assert.equal(isGithubCheckFullyCompliant([results[0]]), true);
+  });
+});
+
+describe("formatGithubSyncReport / isGithubSyncFullySuccessful", () => {
+  test("distinguishes already-compliant, newly-pushed, dry-run, and skipped repos", () => {
+    const results = [
+      { repo: "org/already", status: "up-to-date" },
+      { repo: "org/fixed", status: "added", pushed: true },
+      { repo: "org/preview", status: "would-update" },
+      { repo: "org/broken", status: "skipped", message: "no safe place to add a footer" },
+    ];
+
+    const text = formatGithubSyncReport("org", results, { dryRun: false });
+    assert.match(text, /Taggie GitHub Sync: org/);
+    assert.match(text, /org\/already\s+already up to date/);
+    assert.match(text, /org\/fixed\s+added and pushed/);
+    assert.match(text, /org\/broken\s+skipped: no safe place to add a footer/);
+    assert.match(text, /3 successful/);
+    assert.match(text, /1 skipped/);
+
+    const dryRunText = formatGithubSyncReport("org", results, { dryRun: true });
+    assert.match(dryRunText, /Dry run - nothing was committed or pushed\./);
+
+    assert.equal(isGithubSyncFullySuccessful(results), false);
+    assert.equal(isGithubSyncFullySuccessful(results.slice(0, 3)), true);
   });
 });

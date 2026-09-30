@@ -77,6 +77,17 @@ taggie --remove --output <file>       # or target one file
 
 This only strips taggie's own marked block - it won't delete a Footer component file or its `<Footer />` wiring, since those may have been hand-edited since taggie created them.
 
+## Checking or syncing a whole GitHub user/org
+
+If the user asks about attribution across many repos at once ("which of our repos have attribution", "audit our GitHub org", "sync attribution everywhere"), use these instead of looping `--check`/`--sync` over cloned copies yourself:
+
+```bash
+taggie --check-github <owner>                 # read-only, every repo of a user/org
+taggie --sync-github <owner> --yes            # fix and push non-compliant repos, org-wide
+```
+
+Needs a GitHub token for private repos (`--token <token>`, or `GITHUB_TOKEN`/`GH_TOKEN` in the environment). `--sync-github` previews only unless `--yes` is passed - always show the user the preview report before adding `--yes`, since it commits and pushes to every non-compliant repo in one go.
+
 ## Configuration (`taggie.config.json`)
 
 A project can define its standard attribution once instead of passing flags every time:

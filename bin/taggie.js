@@ -5,6 +5,8 @@ import chalk from "chalk";
 import * as emojiLib from "node-emoji";
 import { promises as fs, realpathSync } from "node:fs";
 import path from "node:path";
+import os from "node:os";
+import { execFileSync } from "node:child_process";
 import { pathToFileURL, fileURLToPath } from "node:url";
 
 const WORD_OVERRIDES = {
@@ -1097,6 +1099,275 @@ export function formatMultiSyncReport(results) {
   return lines.join("\n");
 }
 
+// ---------------------------------------------------------------------
+// GitHub multi-repo check/sync: same idea as syncMultipleProjects, but
+// the targets are every repo of a GitHub user/org instead of local
+// directories you already have on disk. Each repo is shallow-cloned into
+// a throwaway temp directory, checked/synced with the existing
+// single-project functions unmodified, then cleaned up - taggie's
+// detection/injection logic is never reimplemented for this.
+// ---------------------------------------------------------------------
+
+const GITHUB_API = "https://api.github.com";
+
+export function resolveGithubToken(explicit) {
+  return explicit ?? process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? null;
+}
+
+function githubHeaders(token) {
+  return {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+// Pages through one listing endpoint. Returns null (instead of throwing)
+// on a 404 for the first page, so the caller can fall back from the
+// "orgs" endpoint to the "users" one without treating a wrong guess as
+// a hard failure.
+async function fetchAllPages(baseUrl, token, { notFoundOk = false } = {}) {
+  const results = [];
+  let page = 1;
+  while (true) {
+    const res = await fetch(`${baseUrl}?per_page=100&page=${page}`, {
+      headers: githubHeaders(token),
+    });
+    if (res.status === 404 && notFoundOk && page === 1) return null;
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`GitHub API error (${res.status}) fetching ${baseUrl}: ${body.slice(0, 300)}`);
+    }
+    const batch = await res.json();
+    results.push(...batch);
+    if (batch.length < 100) break;
+    page++;
+  }
+  return results;
+}
+
+// Lists every repo owned by a GitHub user or organization (tries "orgs"
+// first, falls back to "users" - the same name can only be one or the
+// other, never both). Forks and archived repos are excluded by default,
+// since most orgs don't want their own attribution standard applied to
+// a fork of someone else's project.
+export async function fetchGithubRepos({ owner, token, includeForks = false, includeArchived = false }) {
+  let repos = await fetchAllPages(`${GITHUB_API}/orgs/${encodeURIComponent(owner)}/repos`, token, {
+    notFoundOk: true,
+  });
+  if (repos === null) {
+    repos = await fetchAllPages(`${GITHUB_API}/users/${encodeURIComponent(owner)}/repos`, token, {
+      notFoundOk: true,
+    });
+  }
+  if (repos === null) {
+    throw new Error(`GitHub user/org "${owner}" not found (or not accessible with the given token).`);
+  }
+
+  return repos
+    .filter((r) => includeForks || !r.fork)
+    .filter((r) => includeArchived || !r.archived)
+    .map((r) => ({
+      name: r.name,
+      fullName: r.full_name,
+      cloneUrl: r.clone_url,
+      defaultBranch: r.default_branch,
+      private: r.private,
+    }));
+}
+
+// Embeds the token in the clone URL (the standard way to authenticate a
+// plain `git` subprocess against GitHub without touching the caller's
+// global git config or credential store). Falls back to the plain HTTPS
+// URL when there's no token - fine for public repos, read-only.
+function authedCloneUrl(cloneUrl, token) {
+  if (!token) return cloneUrl;
+  return cloneUrl.replace("https://", `https://x-access-token:${token}@`);
+}
+
+function execErrorMessage(err) {
+  const stderr = err.stderr ? err.stderr.toString("utf8").trim() : "";
+  return stderr.split("\n").pop() || err.message;
+}
+
+function cloneRepoShallow({ cloneUrl, branch, token, destDir }) {
+  execFileSync(
+    "git",
+    ["clone", "--quiet", "--depth", "1", "--branch", branch, authedCloneUrl(cloneUrl, token), destDir],
+    { stdio: ["ignore", "ignore", "pipe"] }
+  );
+}
+
+function commitAndPush({ destDir, message, branch }) {
+  execFileSync("git", ["add", "-A"], { cwd: destDir, stdio: "ignore" });
+  execFileSync("git", ["commit", "--quiet", "-m", message], { cwd: destDir, stdio: "ignore" });
+  execFileSync("git", ["push", "--quiet", "origin", `HEAD:${branch}`], {
+    cwd: destDir,
+    stdio: ["ignore", "ignore", "pipe"],
+  });
+}
+
+// Runs a callback against every repo of a user/org, each in its own
+// shallow clone under one throwaway temp directory that's always cleaned
+// up afterward (even if a clone or the callback throws). `perRepo`
+// receives the cloned repo's directory (already the cwd) and must return
+// a result object; clone failures are reported the same way as callback
+// failures, via { ok: false, message }.
+async function withGithubRepos({ owner, token, includeForks, includeArchived }, perRepo) {
+  const repos = await fetchGithubRepos({ owner, token, includeForks, includeArchived });
+  const tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "taggie-github-"));
+  const originalCwd = process.cwd();
+  const results = [];
+
+  try {
+    for (const repo of repos) {
+      const destDir = path.join(tmpRoot, repo.name);
+      try {
+        cloneRepoShallow({ cloneUrl: repo.cloneUrl, branch: repo.defaultBranch, token, destDir });
+      } catch (err) {
+        results.push({ repo: repo.fullName, ok: false, message: `couldn't clone: ${execErrorMessage(err)}` });
+        continue;
+      }
+      try {
+        process.chdir(destDir);
+        results.push(await perRepo(repo, destDir));
+      } catch (err) {
+        results.push({ repo: repo.fullName, ok: false, message: err.message });
+      } finally {
+        process.chdir(originalCwd);
+      }
+    }
+  } finally {
+    process.chdir(originalCwd);
+    await fs.rm(tmpRoot, { recursive: true, force: true });
+  }
+
+  return results;
+}
+
+export async function checkGithubOwner({ owner, token, forWhom, by, emoji, template, profile, includeForks, includeArchived }) {
+  return withGithubRepos({ owner, token, includeForks, includeArchived }, async (repo) => {
+    const config = await loadConfig();
+    const profileFields = resolveProfileFields(config, profile);
+    const expectedLine = computeExpectedLine({
+      forWhom: forWhom ?? profileFields.for,
+      by: by ?? profileFields.by,
+      emoji: emoji ?? profileFields.emoji,
+      template: template ?? profileFields.template,
+    });
+    const report = await checkProject(expectedLine);
+    return { repo: repo.fullName, ok: true, report };
+  });
+}
+
+export function isGithubCheckFullyCompliant(results) {
+  return results.every((r) => r.ok && isCheckCompliant(r.report));
+}
+
+export function formatGithubCheckReport(owner, results) {
+  const lines = [`Taggie GitHub Check: ${owner}`, ""];
+  const nameWidth = Math.max(0, ...results.map((r) => r.repo.length));
+  let compliant = 0;
+  let needsAttention = 0;
+
+  for (const r of results) {
+    const name = r.repo.padEnd(nameWidth + 3);
+    if (!r.ok) {
+      lines.push(`⚠ ${name}skipped: ${r.message}`);
+      needsAttention++;
+      continue;
+    }
+    const { report } = r;
+    if (report.noFrameworkDetected) {
+      lines.push(`⚠ ${name}no supported framework detected`);
+      needsAttention++;
+    } else if (!report.hasAttribution) {
+      lines.push(`✗ ${name}${report.frameworkLabel} - missing attribution`);
+      needsAttention++;
+    } else if (report.upToDate === false) {
+      lines.push(`✗ ${name}${report.frameworkLabel} - outdated (currently "${report.attribution}")`);
+      needsAttention++;
+    } else {
+      lines.push(`✓ ${name}${report.frameworkLabel} - up to date`);
+      compliant++;
+    }
+  }
+
+  lines.push("");
+  lines.push(`${compliant} up to date`);
+  if (needsAttention > 0) lines.push(`${needsAttention} need attention`);
+  return lines.join("\n");
+}
+
+// Same idea as syncMultipleProjects, but for every repo of a GitHub
+// user/org: each repo is cloned, synced with the ordinary syncProject
+// logic, and - only when something actually changed and dryRun is
+// false - committed and pushed back to its own origin. A push failure
+// (e.g. branch protection) is reported per-repo instead of aborting the
+// rest of the run.
+export async function syncGithubOwner({ owner, token, forWhom, by, emoji, template, profile, includeForks, includeArchived, dryRun = false }) {
+  return withGithubRepos({ owner, token, includeForks, includeArchived }, async (repo, destDir) => {
+    const config = await loadConfig();
+    const profileFields = resolveProfileFields(config, profile);
+    const resolved = {
+      forWhom: forWhom ?? profileFields.for,
+      by: by ?? profileFields.by,
+      emoji: emoji ?? profileFields.emoji,
+      template: template ?? profileFields.template,
+    };
+    const result = await syncProject(resolved, { dryRun });
+
+    if (result.status === "error" || result.status === "unsafe") {
+      return { repo: repo.fullName, status: "skipped", message: result.message };
+    }
+    if (!dryRun && (result.status === "added" || result.status === "updated")) {
+      try {
+        commitAndPush({ destDir, message: "Sync project attribution via taggie", branch: repo.defaultBranch });
+        return { repo: repo.fullName, ...result, pushed: true };
+      } catch (err) {
+        return {
+          repo: repo.fullName,
+          status: "skipped",
+          message: `synced locally but failed to push: ${execErrorMessage(err)}`,
+        };
+      }
+    }
+    return { repo: repo.fullName, ...result };
+  });
+}
+
+export function isGithubSyncFullySuccessful(results) {
+  return results.every((r) => MULTI_SYNC_SUCCESS_STATUSES.has(r.status));
+}
+
+export function formatGithubSyncReport(owner, results, { dryRun = false } = {}) {
+  const lines = [`Taggie GitHub Sync: ${owner}`, ""];
+  const nameWidth = Math.max(0, ...results.map((r) => r.repo.length));
+  let successful = 0;
+  let skipped = 0;
+
+  for (const r of results) {
+    const name = r.repo.padEnd(nameWidth + 3);
+    if (r.status === "up-to-date") {
+      lines.push(`✓ ${name}already up to date`);
+      successful++;
+    } else if (MULTI_SYNC_SUCCESS_STATUSES.has(r.status)) {
+      const base = MULTI_SYNC_STATUS_LABELS[r.status] ?? r.status;
+      lines.push(`✓ ${name}${r.pushed ? `${base} and pushed` : base}`);
+      successful++;
+    } else {
+      lines.push(`⚠ ${name}skipped: ${r.message ?? "unsupported structure"}`);
+      skipped++;
+    }
+  }
+
+  lines.push("");
+  lines.push(`${successful} successful`);
+  if (skipped > 0) lines.push(`${skipped} skipped`);
+  if (dryRun) lines.push("", "Dry run - nothing was committed or pushed.");
+  return lines.join("\n");
+}
+
 export async function main() {
   const program = new Command();
   program
@@ -1139,14 +1410,34 @@ export async function main() {
     )
     .option(
       "--dry-run",
-      "with --sync or --remove: report what would change without writing anything"
+      "with --sync, --sync-github, or --remove: report what would change without writing anything"
+    )
+    .option(
+      "--check-github <owner>",
+      "read-only: check attribution status across every repo of a GitHub user/org"
+    )
+    .option(
+      "--sync-github <owner>",
+      "check and sync attribution across every repo of a GitHub user/org - previews only unless --yes is also passed"
+    )
+    .option(
+      "--token <token>",
+      "GitHub token for --check-github/--sync-github (defaults to the GITHUB_TOKEN or GH_TOKEN env var)"
+    )
+    .option(
+      "--include-forks",
+      "with --check-github/--sync-github: also include forked repos (excluded by default)"
+    )
+    .option(
+      "--include-archived",
+      "with --check-github/--sync-github: also include archived repos (excluded by default)"
     );
 
   program.parse();
   const opts = program.opts();
 
   let config = null;
-  if (!opts.initSkill && !opts.remove) {
+  if (!opts.initSkill && !opts.remove && !opts.checkGithub && !opts.syncGithub) {
     try {
       config = await loadConfig();
     } catch (err) {
@@ -1155,6 +1446,61 @@ export async function main() {
     }
   }
   const profileFields = resolveProfileFields(config, opts.profile);
+
+  if (opts.checkGithub) {
+    const token = resolveGithubToken(opts.token);
+    let results;
+    try {
+      results = await checkGithubOwner({
+        owner: opts.checkGithub,
+        token,
+        forWhom: opts.for,
+        by: opts.by,
+        emoji: opts.emoji,
+        template: opts.template,
+        profile: opts.profile,
+        includeForks: opts.includeForks,
+        includeArchived: opts.includeArchived,
+      });
+    } catch (err) {
+      console.error(chalk.red(err.message));
+      process.exit(1);
+    }
+    console.log(formatGithubCheckReport(opts.checkGithub, results));
+    process.exit(isGithubCheckFullyCompliant(results) ? 0 : 1);
+  }
+
+  if (opts.syncGithub) {
+    const token = resolveGithubToken(opts.token);
+    const dryRun = opts.dryRun || !opts.yes;
+    if (!opts.dryRun && !opts.yes) {
+      console.log(
+        chalk.yellow(
+          "Previewing only - nothing will be committed or pushed. Pass --yes to actually apply and push changes.\n"
+        )
+      );
+    }
+    let results;
+    try {
+      results = await syncGithubOwner({
+        owner: opts.syncGithub,
+        token,
+        forWhom: opts.for,
+        by: opts.by,
+        emoji: opts.emoji,
+        template: opts.template,
+        profile: opts.profile,
+        includeForks: opts.includeForks,
+        includeArchived: opts.includeArchived,
+        dryRun,
+      });
+    } catch (err) {
+      console.error(chalk.red(err.message));
+      process.exit(1);
+    }
+    console.log(formatGithubSyncReport(opts.syncGithub, results, { dryRun }));
+    process.exit(isGithubSyncFullySuccessful(results) ? 0 : 1);
+  }
 
   if (opts.check) {
     const expectedLine = computeExpectedLine({
