@@ -2,6 +2,10 @@
 
 All notable changes to `taggie-cli` are documented here. Versions match what's published on [npm](https://www.npmjs.com/package/taggie-cli?activeTab=versions).
 
+## Unreleased
+
+- Added `action.yml`: taggie is now usable as a GitHub Action (`uses: nerds-lab-chapter-26/taggie-cli@v0.2.8`), not just an npm CLI. Supports `check` and `sync`, with a `compliant` output for `check`.
+
 ## 0.2.8
 
 - Added `--check-github <owner>` and `--sync-github <owner>`: run the same check/sync across every repo of a GitHub user or org in one go, each in its own throwaway clone. `--sync-github` previews only unless `--yes` is also passed, since it can commit and push to many repos at once. Needs a `--token`, `GITHUB_TOKEN`, or `GH_TOKEN` for private repos or to avoid low anonymous rate limits; forks and archived repos are skipped by default (`--include-forks`/`--include-archived`).

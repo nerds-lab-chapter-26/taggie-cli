@@ -1,0 +1,74 @@
+name: "Taggie Attribution Check"
+description: 'Check or sync project attribution footers ("Made with ___ for ___") with taggie-cli'
+author: "Nerds Lab"
+branding:
+  icon: "check-circle"
+  color: "purple"
+
+inputs:
+  command:
+    description: '"check" (read-only, fails the step if attribution is missing/outdated) or "sync" (brings the project into compliance)'
+    required: false
+    default: "check"
+  for:
+    description: "Who it's made for (passed as --for). Not needed if taggie.config.json already has one."
+    required: false
+  by:
+    description: "Author/team name (passed as --by, for byline/crafted templates)."
+    required: false
+  emoji:
+    description: "Emoji, :shortcode:, or word (passed as --emoji)."
+    required: false
+  template:
+    description: "simple | byline | crafted (passed as --template)."
+    required: false
+  profile:
+    description: "Named profile from taggie.config.json (passed as --profile)."
+    required: false
+  dry-run:
+    description: 'With command: "sync", preview what would change without writing anything.'
+    required: false
+    default: "false"
+  version:
+    description: "taggie-cli version to install (npm version or dist-tag)."
+    required: false
+    default: "latest"
+
+outputs:
+  compliant:
+    description: 'With command: "check" - "true" if attribution is present and up to date, "false" otherwise.'
+    value: ${{ steps.run.outputs.compliant }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install taggie-cli
+      shell: bash
+      run: npm install --global "taggie-cli@${{ inputs.version }}"
+
+    - name: Run taggie
+      id: run
+      shell: bash
+      run: |
+        set +e
+        args=()
+        [ -n "${{ inputs.for }}" ] && args+=(--for "${{ inputs.for }}")
+        [ -n "${{ inputs.by }}" ] && args+=(--by "${{ inputs.by }}")
+        [ -n "${{ inputs.emoji }}" ] && args+=(--emoji "${{ inputs.emoji }}")
+        [ -n "${{ inputs.template }}" ] && args+=(--template "${{ inputs.template }}")
+        [ -n "${{ inputs.profile }}" ] && args+=(--profile "${{ inputs.profile }}")
+
+        if [ "${{ inputs.command }}" = "sync" ]; then
+          [ "${{ inputs.dry-run }}" = "true" ] && args+=(--dry-run)
+          taggie --sync "${args[@]}"
+          exit_code=$?
+        else
+          taggie --check "${args[@]}"
+          exit_code=$?
+          if [ $exit_code -eq 0 ]; then
+            echo "compliant=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "compliant=false" >> "$GITHUB_OUTPUT"
+          fi
+        fi
+        exit $exit_code

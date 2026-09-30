@@ -330,6 +330,16 @@ jobs:
       - run: npx taggie-cli --check
 ```
 
+Or use taggie as a proper GitHub Action instead of a raw `npx` call, which also gives you a `compliant` output you can branch on:
+
+```yaml
+- uses: nerds-lab-chapter-26/taggie-cli@v0.2.8
+  with:
+    command: check   # or "sync"
+```
+
+See [action.yml](action.yml) for every input (`for`, `by`, `emoji`, `template`, `profile`, `dry-run`, `version`).
+
 ## Let a coding agent run taggie for you
 
 Instead of typing `taggie` yourself, install agent integration once and just ask your agent to "add a footer," "check attribution," or "sync attribution": it runs taggie on your behalf and reports what happened.
