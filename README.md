@@ -7,10 +7,15 @@
 [![built by Nerds Lab](https://img.shields.io/badge/built_by-Nerds%20Lab-blueviolet?style=flat-square)](https://github.com/nerds-lab-chapter-26)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Taggie%20Attribution%20Check-6f42c1?style=flat-square&logo=github)](https://github.com/marketplace/actions/taggie-attribution-check)
 
-**Safely add and manage project attribution across your codebase.**  
-Interactive · CI · AI Agents
+**Keep "Made with ❤️ for ___" attribution consistent everywhere your code runs, automatically.**  
+Interactive · CI · AI Agents · GitHub Action
 
-It's a small, local-first developer utility: no backend, no account, no dashboard. Everything happens on your filesystem, in one command.
+A small, local-first CLI for generating, checking, syncing, and removing project attribution footers, across one project or every repo in a GitHub org. No backend, no account, no dashboard: everything happens on your filesystem (or the GitHub API, for org-wide checks), in one command.
+
+- Auto-detects Next.js, React, Vue, Svelte, and plain HTML, and injects into the real rendered footer, not just a README
+- CI-friendly: meaningful exit codes, idempotent, safe to run on every PR
+- Works on one project, many projects, or a whole GitHub user/org at once
+- Usable from the terminal, a script, a coding agent, or as a [GitHub Action](https://github.com/marketplace/actions/taggie-attribution-check)
 
 Built and maintained by [Nerds Lab](https://github.com/nerds-lab-chapter-26), used in our own projects, not just a weekend script.
 
